@@ -11,23 +11,23 @@ BrowserRoutes createBrowserRoutes() {
     children: [
       RouterfyRoute(
         path: '/',
-        builder: (context) => HomePage(),
+        builder: (context, state) => HomePage(),
       ),
       RouterfyRoute(
         path: '/login',
-        builder: (context) => LoginPage(),
+        builder: (context, state) => LoginPage(),
       ),
       RouterfyRoute(
         path: '/settings',
-        builder: (context) => SettingsPage(),
+        builder: (context, state) => SettingsPage(),
         children: [
           RouterfyRoute(
             path: '/profile',
-            builder: (context) => ProfilePage(),
+            builder: (context, state) => ProfilePage(),
           ),
           RouterfyRoute(
             path: '/themes',
-            builder: (context) => AboutPage(),
+            builder: (context, state) => AboutPage(),
           ),
         ],
       ),
@@ -44,9 +44,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RouterfyProvider(
+    return MaterialApp.routerfy(
       routes: createBrowserRoutes(),
-      child: HomePage(),
     );
   }
 }

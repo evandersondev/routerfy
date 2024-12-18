@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 
+/// Classe principal do Routerfy
 class Routerfy {
-  Routerfy._();
+  static final Routerfy _instance = Routerfy._internal();
+  Routerfy._internal();
 
-  static final Routerfy _instance = Routerfy._();
   static Routerfy get instance => _instance;
 
-  static final GlobalKey<NavigatorState> navigatorKey =
-      GlobalKey<NavigatorState>();
+  final Map<String, Widget Function(BuildContext, RouterfyState)> _routeCache =
+      {};
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-  final Map<String, WidgetBuilder> _routeCache = {};
-
-  // Inicializa as rotas e sub-rotas no mapa privado
+  /// Configura as rotas e cacheia caminhos
   void configureRoutes(BrowserRoutes routes) {
     _routeCache.clear();
     _flattenRoutes(routes.children, "");
-    print("Cached routes: ${_routeCache.keys}");
+    print("Cached Routes: ${_routeCache.keys}");
   }
 
   void _flattenRoutes(List<RouterfyRoute> routes, String parentPath) {
@@ -23,51 +23,57 @@ class Routerfy {
       final fullPath = "$parentPath${route.path}".replaceAll("//", "/");
       _routeCache[fullPath] = route.builder;
 
-      // Processa sub-rotas recursivamente
       if (route.children.isNotEmpty) {
         _flattenRoutes(route.children, fullPath);
       }
     }
   }
 
-  // Push para navegar para uma rota com query params
+  Route<dynamic>? onGenerateRoute(RouteSettings settings) {
+    final uri = Uri.parse(settings.name ?? "/");
+    final path = uri.path;
+
+    // Encontra rota correspondente
+    final builder = _routeCache[path];
+    if (builder != null) {
+      return MaterialPageRoute(
+        builder: (context) =>
+            builder(context, RouterfyState(uri.queryParameters, settings)),
+        settings: settings,
+      );
+    }
+
+    // Página 404
+    return MaterialPageRoute(
+      builder: (_) => const Scaffold(
+        body: Center(child: Text("404 - Page Not Found")),
+      ),
+    );
+  }
+
   void push(String routeName, {Map<String, String>? queryParams}) {
     final uri = Uri(path: routeName, queryParameters: queryParams);
     navigatorKey.currentState?.pushNamed(uri.toString());
   }
 
-  // Replace para substituir a rota atual
   void replace(String routeName, {Map<String, String>? queryParams}) {
     final uri = Uri(path: routeName, queryParameters: queryParams);
     navigatorKey.currentState?.pushReplacementNamed(uri.toString());
   }
-
-  // onGenerateRoute - resolve a rota usando o mapa privado
-  Route<dynamic>? onGenerateRoute(RouteSettings settings) {
-    final uri = Uri.parse(settings.name ?? "/");
-    final path = uri.path;
-
-    final builder = _routeCache[path];
-    if (builder != null) {
-      return MaterialPageRoute(
-        builder: (context) => builder(context),
-        settings: RouteSettings(
-          name: settings.name,
-          arguments: uri.queryParameters,
-        ),
-      );
-    }
-
-    // Rota não encontrada (404)
-    return MaterialPageRoute(
-      builder: (context) => const Scaffold(
-        body: Center(child: Text("404 - Page not found")),
-      ),
-    );
-  }
 }
 
-// Estrutura para definir rotas
+class RouterfyState {
+  final Map<String, String> query;
+  final RouteSettings settings;
+
+  RouterfyState(this.query, this.settings);
+
+  /// Retorna um parâmetro da rota pelo nome
+  String? param(String key) => settings.arguments != null
+      ? (settings.arguments as Map<String, String>?)![key]
+      : null;
+}
+
 class BrowserRoutes {
   final List<RouterfyRoute> children;
 
@@ -76,7 +82,7 @@ class BrowserRoutes {
 
 class RouterfyRoute {
   final String path;
-  final WidgetBuilder builder;
+  final Widget Function(BuildContext, RouterfyState) builder;
   final List<RouterfyRoute> children;
 
   RouterfyRoute({
@@ -86,25 +92,14 @@ class RouterfyRoute {
   });
 }
 
-// Provedor principal do Routerfy
-class RouterfyProvider extends StatelessWidget {
-  final BrowserRoutes routes;
-  final Widget child;
-
-  const RouterfyProvider({
-    super.key,
-    required this.routes,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+/// Extensão para MaterialApp
+extension RouterfyMaterialApp on MaterialApp {
+  static Widget testando({required BrowserRoutes routes}) {
     Routerfy.instance.configureRoutes(routes);
 
     return MaterialApp(
-      navigatorKey: Routerfy.navigatorKey,
+      navigatorKey: Routerfy.instance.navigatorKey,
       onGenerateRoute: Routerfy.instance.onGenerateRoute,
-      home: child,
     );
   }
 }
