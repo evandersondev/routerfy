@@ -11,8 +11,8 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        color: Colors.amber,
+      body: Center(
+        child: Text('Profile'),
       ),
     );
   }

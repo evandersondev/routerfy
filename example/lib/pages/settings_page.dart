@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:routerfy/routerfy.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -11,11 +12,10 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
+      body: Column(
         children: [
           Text('SETTINGS'),
+          Expanded(child: Outlet()),
         ],
       ),
     );

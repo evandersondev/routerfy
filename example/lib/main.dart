@@ -5,6 +5,10 @@ import 'package:example/pages/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:routerfy/routerfy.dart';
 
+import 'pages/general_page.dart';
+import 'pages/profile_page.dart';
+import 'pages/theme_page.dart';
+
 BrowserRouter createBrowserRouter() {
   return BrowserRouter(
     children: [
@@ -17,8 +21,22 @@ BrowserRouter createBrowserRouter() {
         builder: (context, state) => LoginPage(),
       ),
       RouterfyRoute(
-        path: '/product',
+        path: '/settings',
         builder: (context, state) => SettingsPage(),
+        children: [
+          RouterfyRoute(
+            path: '/',
+            builder: (context, state) => GeneralPage(),
+          ),
+          RouterfyRoute(
+            path: '/profile',
+            builder: (context, state) => ProfilePage(),
+          ),
+          RouterfyRoute(
+            path: '/theme',
+            builder: (context, state) => ThemePage(),
+          ),
+        ],
       ),
       RouterfyRoute(
         path: '/product/:id',
