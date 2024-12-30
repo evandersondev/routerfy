@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:path_to_regexp/path_to_regexp.dart';
+import 'package:url_strategy/url_strategy.dart';
 
 class Routerfy {
   static final Routerfy _instance = Routerfy._internal();
-  Routerfy._internal();
+  Routerfy._internal() {
+    // Remova o "#" da URL no Flutter Web ao inicializar o Routerfy
+    setPathUrlStrategy();
+  }
 
   static Routerfy get instance => _instance;
 
