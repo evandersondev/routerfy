@@ -10,6 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  path_to_regexp: ^0.4.0
   url_strategy: ^0.3.0
 
 dev_dependencies:

@@ -9,6 +9,8 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final router = Routerfy.instance;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,10 +21,8 @@ class _LoginPageState extends State<LoginPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text('LOGIN'),
-            TextButton(
-              onPressed: () {
-                Routerfy.instance.push('/');
-              },
+            NavLink(
+              to: '/',
               child: Text('H O M E'),
             ),
           ],

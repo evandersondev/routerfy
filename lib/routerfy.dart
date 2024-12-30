@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:path_to_regexp/path_to_regexp.dart';
 
-/// Classe principal do Routerfy
 class Routerfy {
   static final Routerfy _instance = Routerfy._internal();
   Routerfy._internal();
@@ -12,7 +12,7 @@ class Routerfy {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   /// Configura as rotas e cacheia caminhos
-  void configureRoutes(BrowserRoutes routes) {
+  void configureRoutes(BrowserRouter routes) {
     _routeCache.clear();
     _flattenRoutes(routes.children, "");
     print("Cached Routes: ${_routeCache.keys}");
@@ -22,10 +22,6 @@ class Routerfy {
     for (var route in routes) {
       final fullPath = "$parentPath${route.path}".replaceAll("//", "/");
       _routeCache[fullPath] = route.builder;
-
-      if (route.children.isNotEmpty) {
-        _flattenRoutes(route.children, fullPath);
-      }
     }
   }
 
@@ -34,13 +30,23 @@ class Routerfy {
     final path = uri.path;
 
     // Encontra rota correspondente
-    final builder = _routeCache[path];
-    if (builder != null) {
-      return MaterialPageRoute(
-        builder: (context) =>
-            builder(context, RouterfyState(uri.queryParameters, settings)),
-        settings: settings,
-      );
+    for (var route in _routeCache.entries) {
+      final parameters = <String>[];
+      final regexp = pathToRegExp(route.key, parameters: parameters);
+      final match = regexp.matchAsPrefix(path);
+
+      if (match != null) {
+        final params = extract(parameters, match);
+        final state = RouterfyState(params, uri.queryParameters, settings);
+        return PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              route.value(context, state),
+          settings: settings,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return child; // Sem animação
+          },
+        );
+      }
     }
 
     // Página 404
@@ -63,43 +69,49 @@ class Routerfy {
 }
 
 class RouterfyState {
+  final Map<String, String> params;
   final Map<String, String> query;
   final RouteSettings settings;
 
-  RouterfyState(this.query, this.settings);
+  RouterfyState(this.params, this.query, this.settings);
 
   /// Retorna um parâmetro da rota pelo nome
-  String? param(String key) => settings.arguments != null
-      ? (settings.arguments as Map<String, String>?)![key]
-      : null;
+  String? param(String key) => params[key];
 }
 
-class BrowserRoutes {
+class BrowserRouter {
   final List<RouterfyRoute> children;
 
-  BrowserRoutes({required this.children});
+  BrowserRouter({required this.children});
 }
 
 class RouterfyRoute {
   final String path;
   final Widget Function(BuildContext, RouterfyState) builder;
-  final List<RouterfyRoute> children;
 
   RouterfyRoute({
     required this.path,
     required this.builder,
-    this.children = const [],
   });
 }
 
-/// Extensão para MaterialApp
-extension RouterfyMaterialApp on MaterialApp {
-  static Widget testando({required BrowserRoutes routes}) {
-    Routerfy.instance.configureRoutes(routes);
+class NavLink extends StatelessWidget {
+  final String to;
+  final Widget child;
 
-    return MaterialApp(
-      navigatorKey: Routerfy.instance.navigatorKey,
-      onGenerateRoute: Routerfy.instance.onGenerateRoute,
+  const NavLink({
+    super.key,
+    required this.to,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Routerfy.instance.push(to);
+      },
+      child: child,
     );
   }
 }

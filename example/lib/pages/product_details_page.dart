@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class ProductDetailsPage extends StatefulWidget {
-  const ProductDetailsPage({super.key});
+  final String id;
+
+  const ProductDetailsPage({super.key, required this.id});
 
   @override
   State<ProductDetailsPage> createState() => _ProductDetailsPageState();
@@ -12,7 +14,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Text('PRODUCT DETAIL'),
+        child: Text('PRODUCT DETAIL: ${widget.id}'),
       ),
     );
   }
